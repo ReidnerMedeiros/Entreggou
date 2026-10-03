@@ -1,0 +1,93 @@
+{
+  "summary": {
+    "projectName": "EntregasMonitor",
+    "locale": "en",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 25,
+    "overview": "Quick 7-day review with low confidence. The project is at its starting point: one requirements spec, no code, no agent configuration, and no version control. The only recorded session is this review itself, and the project-history check could not run because the folder is not a git repository.",
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "Task Understanding",
+        "score": 40,
+        "summary": "A requirements spec exists in docs/specs, but no agent has worked on a task yet, so intent and scope handling are unobserved.",
+        "findingRefs": []
+      },
+      {
+        "id": "controlled-execution",
+        "label": "Controlled Execution",
+        "score": 35,
+        "summary": "There is no runnable project and no agent permission or command configuration yet, so startup and operation are unobserved.",
+        "findingRefs": []
+      },
+      {
+        "id": "change-validation",
+        "label": "Change Validation",
+        "score": 30,
+        "summary": "No code, tests, or checks exist yet and no edit was observed, so validation is unobserved.",
+        "findingRefs": []
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "Reliable Delivery",
+        "score": 25,
+        "summary": "Without version control, agent edits currently have no history, diff, or rollback point.",
+        "findingRefs": [
+          "no-version-control"
+        ]
+      },
+      {
+        "id": "learning-capture",
+        "label": "Learning Capture",
+        "score": 35,
+        "summary": "Only one session (this review) is in the window, so repeated work and reuse cannot be judged yet.",
+        "findingRefs": [
+          "no-observed-agent-work"
+        ]
+      }
+    ],
+    "aiAgentPractice": {
+      "inspectedSurfaces": [],
+      "coverageRows": [
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        }
+      ]
+    },
+    "assignmentSummaries": []
+  },
+  "findings": [
+    {
+      "id": "no-version-control",
+      "title": "Agent edits will have no history or rollback point",
+      "severity": "Medium",
+      "reason": "Observed: E:EntregasMonitor is not a git repository, so the project-history check failed (GIT_COMMAND_FAILED) and the full review was blocked. Inference: once an agent starts writing code here, there is no diff to review, no commit to revert to, and no history for later reviews. Owner: the project root. Uncertainty: there is no code yet, so no damage has happened; the risk starts with the first implementation session.",
+      "dimensionRefs": [
+        "reliable-delivery"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nInitialise version control in E:EntregasMonitor before any implementation work starts. Ask the user before running git init and before making the first commit.\n\n## Validation\n\n- Run `git -C E:/EntregasMonitor rev-parse --is-inside-work-tree` and confirm it prints true\n- Re-run /better-harness:better-harness and confirm the project-harness lane is available",
+      "expectedArtifact": "Git repository",
+      "expectedOutput": [
+        "A git repository at the project root with the existing docs committed, so every later agent change has a reviewable diff and a revert point."
+      ]
+    },
+    {
+      "id": "no-observed-agent-work",
+      "title": "No agent work in this project has been observed yet",
+      "severity": "Low",
+      "reason": "Observed: the 7-day window contains one session, and that session is this review; no edits, checks, or results were recorded. Inference: whether the agent follows the spec, validates changes, or repeats work cannot be judged, so every score in this report is a placeholder bounded by missing evidence. Owner: the review cadence, not any asset. Uncertainty: this is an evidence boundary, not a defect.",
+      "dimensionRefs": [
+        "learning-capture"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nNo change is needed now. After the first implementation sessions on the cadastro-de-entregadores spec, re-run the review at normal depth.\n\n## Validation\n\n- Re-run /better-harness:better-harness with the default 30-day depth\n- Confirm the session lane reports at least two task episodes with edits",
+      "expectedArtifact": "Follow-up review",
+      "expectedOutput": [
+        "A later review with real task episodes, so scores reflect observed behaviour instead of missing evidence."
+      ]
+    }
+  ]
+}
