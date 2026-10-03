@@ -1,0 +1,169 @@
+{
+  "summary": {
+    "projectName": "entregas-monitor",
+    "locale": "en",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 25,
+    "overview": "O harness já tem instruções, uma spec, uma skill de teste e um hook de npm test, mas dois mecanismos ainda não fecham o ciclo: a falha do teste no hook não volta para o agente e os comandos de lint e dev documentados não existem.",
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "Task Understanding",
+        "score": 74,
+        "summary": "CLAUDE.md importa o AGENTS.md, a spec 001 é a fonte da verdade e o teste da RN-03 cita a spec; a regra de spec somente leitura ainda é só texto.",
+        "findingRefs": []
+      },
+      {
+        "id": "controlled-execution",
+        "label": "Controlled Execution",
+        "score": 52,
+        "summary": "npm test roda, mas npm run lint e npm run dev, documentados no AGENTS.md, falham com Missing script, e a versão do Node não está fixada.",
+        "findingRefs": [
+          "documented-lint-dev-missing",
+          "node-version-not-pinned",
+          "spec-readonly-not-enforced"
+        ]
+      },
+      {
+        "id": "change-validation",
+        "label": "Change Validation",
+        "score": 58,
+        "summary": "Há um teste focado da RN-03 que passa (6 testes), mas o hook pós-edição não devolve a falha ao agente e nenhum episódio ligou a validação final à mudança revisada.",
+        "findingRefs": [
+          "hook-test-failure-not-fed-back"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "Reliable Delivery",
+        "score": 40,
+        "summary": "O repositório não tem remoto nem CI; a aceitação além do teste local não foi observada.",
+        "findingRefs": []
+      },
+      {
+        "id": "learning-capture",
+        "label": "Learning Capture",
+        "score": 45,
+        "summary": "A skill teste-de-regra foi invocada uma vez; a janela de um dia não mostrou trabalho repetido entre episódios distintos nem uma comparação posterior.",
+        "findingRefs": []
+      }
+    ],
+    "aiAgentPractice": {
+      "inspectedSurfaces": [
+        "Rules",
+        "Skills",
+        "Hooks"
+      ],
+      "coverageRows": [
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 1,
+          "paths": [
+            "CLAUDE.md"
+          ]
+        },
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 1,
+          "paths": [
+            ".claude/skills/teste-de-regra/SKILL.md"
+          ]
+        },
+        {
+          "surface": "Hooks",
+          "scopes": [
+            "Project"
+          ],
+          "count": 1,
+          "paths": [
+            ".claude/settings.json"
+          ]
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        }
+      ]
+    },
+    "assignmentSummaries": []
+  },
+  "findings": [
+    {
+      "id": "hook-test-failure-not-fed-back",
+      "title": "Quando o npm test do hook falha, o agente não fica sabendo",
+      "severity": "Medium",
+      "reason": "Fato: o hook PostToolUse em .claude/settings.json roda `npm test` após cada Edit ou Write. Fato: o Vitest sai com código 1 quando um teste falha. Inferência (contrato de hooks do Claude Code): em PostToolUse, só o código de saída 2 devolve o stderr ao Claude; outros códigos não zero aparecem apenas para o usuário. Consequência: uma edição que quebra um teste segue sem que o agente receba a falha, e a regra do CLAUDE.md de rodar npm test antes de concluir depende só da memória do agente. Dono: .claude/settings.json. Incerteza: o hook foi adicionado no último commit e ainda não houve episódio em que ele disparou com falha.",
+      "dimensionRefs": [
+        "change-validation"
+      ],
+      "subdimensionRefs": [
+        "relevant-check"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nAjuste só o comando do hook PostToolUse em .claude/settings.json para que a falha do npm test chegue ao agente: mande a saída do teste para o stderr e saia com código 2 quando o teste falhar (por exemplo `npm test 1>&2 || exit 2`). Não altere matcher, permissões nem outros arquivos.\n\n## Validação\n\n- Rode npm test e confirme que passa\n- Quebre temporariamente uma asserção em backend/tests/senha-entregador.test.js, faça uma edição e confirme que o agente recebe a falha do teste\n- Desfaça a quebra e rode npm test de novo",
+      "expectedArtifact": "Config",
+      "expectedOutput": [
+        "Um hook PostToolUse cuja falha de teste volta para o agente como feedback, confirmado por uma quebra temporária e desfeita."
+      ]
+    },
+    {
+      "id": "documented-lint-dev-missing",
+      "title": "npm run lint e npm run dev, pedidos no AGENTS.md, falham com Missing script",
+      "severity": "Medium",
+      "reason": "Fato: o AGENTS.md lista `npm run dev` e `npm run lint` como comandos do projeto, e .claude/settings.json libera `Bash(npm run lint)`. Fato: o package.json só define o script `test`, e ESLint não está instalado; rodar os dois comandos nesta revisão terminou em `npm error Missing script`. Consequência: um agente que segue as instruções esbarra num comando inexistente e não tem gate de lint, embora o ESLint esteja na stack aprovada. Dono: package.json e AGENTS.md. Incerteza: a equipe pode ter adiado dev e lint de propósito até existir backend e frontend.",
+      "dimensionRefs": [
+        "controlled-execution"
+      ],
+      "subdimensionRefs": [
+        "instruction-led-start"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nO AGENTS.md documenta npm run lint e npm run dev, mas o package.json só tem o script test. Pergunte ao usuário qual leitura vale antes de agir: (a) adicionar ESLint, que está na stack aprovada, com um script lint no package.json (npm install pede aprovação); ou (b) marcar no AGENTS.md que lint e dev ainda não existem. Não crie o script dev sem um servidor real para ele subir.\n\n## Validação\n\n- Rode npm run lint e confirme que ele roda (opção a) ou que o AGENTS.md não promete mais o comando (opção b)\n- Rode npm test e mostre a saída",
+      "expectedArtifact": "Config",
+      "expectedOutput": [
+        "Todo comando listado no AGENTS.md roda a partir da raiz, ou está marcado como ainda não disponível."
+      ]
+    },
+    {
+      "id": "node-version-not-pinned",
+      "title": "O projeto pede Node 22, mas roda em Node 24 sem nenhum aviso",
+      "severity": "Low",
+      "reason": "Fato: o AGENTS.md fixa a stack em Node 22. Fato: o package.json não tem `engines` e o repositório não tem .nvmrc; o runtime usado nesta revisão foi Node v24.18.0 e nada sinalizou a diferença. Consequência: agente e equipe podem validar em versões diferentes sem perceber. Dono: package.json. Incerteza: ainda não se observou nenhuma falha causada pela diferença.",
+      "dimensionRefs": [
+        "controlled-execution"
+      ],
+      "subdimensionRefs": [
+        "instruction-led-start"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nDeclare a versão de Node do AGENTS.md no package.json com um campo engines (por exemplo \"node\": \">=22 <23\"), sem instalar nada e sem mudar outros campos. Avise que, com Node 24 local, o npm passará a mostrar um aviso de engine.\n\n## Validação\n\n- Rode node --version e npm test e mostre a saída\n- Confirme que o campo engines bate com a versão do AGENTS.md",
+      "expectedArtifact": "Config",
+      "expectedOutput": [
+        "Um package.json que declara a versão de Node do AGENTS.md e deixa visível quando o runtime local é outro."
+      ]
+    },
+    {
+      "id": "spec-readonly-not-enforced",
+      "title": "A regra de spec somente leitura não tem nenhum controle de permissão",
+      "severity": "Low",
+      "reason": "Fato: o CLAUDE.md diz que docs/specs/ é somente leitura e o AGENTS.md diz para nunca alterá-la sem aviso. Fato: .claude/settings.json tem ask e deny para outras ações, mas nenhuma regra para editar docs/specs/. Consequência: a única barreira contra uma edição da spec, que é a fonte da verdade, é o agente lembrar da instrução. Dono: .claude/settings.json. Incerteza: nenhum episódio da janela tentou editar a spec; isto é uma exigência explícita sem controle, não uma violação observada.",
+      "dimensionRefs": [
+        "controlled-execution"
+      ],
+      "subdimensionRefs": [
+        "permission-boundary"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\nAcrescente em permissions.ask do .claude/settings.json uma regra Edit(./docs/specs/**), no mesmo estilo de caminho das regras já existentes, para que qualquer edição da spec peça confirmação. Use ask, não deny, porque o AGENTS.md permite alterar a spec com aviso. Não mexa em docs/specs/ nem no hook.\n\n## Validação\n\n- Rode npm test e mostre a saída\n- Peça uma edição de teste num arquivo de docs/specs/ e confirme que o Claude Code pede aprovação; recuse",
+      "expectedArtifact": "Config",
+      "expectedOutput": [
+        "Uma tentativa de editar docs/specs/ que pede aprovação antes de acontecer."
+      ]
+    }
+  ]
+}
