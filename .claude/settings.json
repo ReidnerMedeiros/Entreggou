@@ -12,5 +12,18 @@
       "Read(./backend/.env)",
       "Bash(rm -rf:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm test"
+          }
+        ]
+      }
+    ]
   }
 }
