@@ -24,7 +24,7 @@ defina DATABASE_URL e aplique backend/src/infrastructure/schema.sql.
 
 ## Stack e versões
 
-JavaScript, Node 22, Express, PostgreSQL, React com Vite, Vitest, ESLint.
+JavaScript, Node 24, Express, PostgreSQL, React com Vite, Vitest, ESLint.
 
 Não instale nenhuma biblioteca fora dessa lista sem aprovação da equipe.
 
