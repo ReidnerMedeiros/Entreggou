@@ -6,11 +6,21 @@ Todos os comandos rodam da raiz do repositório (há um único package.json).
 
 npm install          # instala as dependências
 
-npm run dev          # sobe o projeto em desenvolvimento
+npm run db:install   # 1a vez: baixa o PostgreSQL portátil para .pg/ (Windows)
+
+npm run db:start     # sobe o PostgreSQL em localhost:5433 e aplica o schema
+
+npm run db:stop      # para o PostgreSQL
+
+npm run dev          # API em localhost:3000 e telas em http://localhost:5173
 
 npm test             # Vitest, passa antes de todo commit
 
 npm run lint         # ESLint
+
+Os testes não precisam do banco. Fora do Windows, ou com outro PostgreSQL,
+
+defina DATABASE_URL e aplique backend/src/infrastructure/schema.sql.
 
 ## Stack e versões
 
@@ -39,6 +49,8 @@ depende de nenhuma outra camada.
 As specs ficam em docs/specs/ e são a fonte da verdade.
 
 Spec atual: docs/specs/001-cadastro-de-entregadores.md.
+
+Plano da spec atual: docs/specs/001-plano.md.
 
 Nunca altere docs/specs/ sem aviso.
 
