@@ -1,2 +1,5 @@
 backend/.env
 node_modules/
+.pg/
+dist/
+contexto/

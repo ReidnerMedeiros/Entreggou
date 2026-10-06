@@ -239,6 +239,45 @@ D-21  Varreduras da Aula 08: vagueza e fuga não tiveram ocorrências. Na
       virou regra (D-18).
       Motivo: nenhuma ocorrência pode ficar sem decisão.
 
+Decisões tomadas na implementação (plano em docs/specs/001-plano.md). Nenhuma
+muda uma regra ou um critério de aceite acima. Elas preenchem lacunas.
+
+D-22  Novas mensagens de erro, no mesmo padrão da D-15: "ERRO Nome deve ter
+      de 3 a 80 caracteres", "ERRO Usuário deve ter de 3 a 30 caracteres",
+      "ERRO Entregador não encontrado" e "ERRO Status deve ser ATIVO ou
+      INATIVO". Campo vazio ou ausente cai na mensagem de tamanho do campo.
+      Motivo: a spec não definia essas mensagens.
+
+D-23  O sistema guarda a senha com hash scrypt (node:crypto, sem biblioteca
+      nova), no formato "salt:hash". Nenhuma tela nem resposta da API exibe
+      a senha ou o hash.
+      Motivo: a spec não dizia como guardar a senha.
+
+D-24  Dois entregadores podem ter o mesmo nome. Só o usuário é único (RN-02).
+      A listagem é ordenada por nome. O sistema não remove espaços dos
+      campos e conta caracteres como o .length do JavaScript.
+      Motivo: lacunas da spec, decididas pelo mínimo.
+
+D-25  A 001 não tem login (D-05), então todas as telas são do operador e a
+      RN-06 vale por não existir tela para o entregador. RN-04, RN-05 e RN-08
+      ficam para as features de login e de entregas (D-05, D-10, D-11).
+      Motivo: dependem de features que ainda não existem.
+
+D-26  API: POST /api/entregadores (cadastrar), GET /api/entregadores?status=
+      (listar, padrão ATIVO), PATCH /api/entregadores/:id (nome),
+      POST /api/entregadores/:id/inativar, POST /api/entregadores/:id/ativar
+      e PUT /api/entregadores/:id/senha. Erros respondem { erro } com 400,
+      409 (usuário já cadastrado) ou 404 (entregador não encontrado).
+      Esquema do banco em backend/src/infrastructure/schema.sql.
+      Motivo: a spec não definia rotas nem esquema.
+
+D-27  A unicidade do usuário usa índice único em lower(usuario), com o
+      PostgreSQL inicializado com --locale-provider=builtin
+      --builtin-locale=C.UTF-8 para que lower() trate acentos como o
+      toLowerCase() do JavaScript ("JOÃO" e "João" iguais; "João" e "Joao"
+      diferentes).
+      Motivo: com o locale C, lower() ignora letras acentuadas.
+
 Se o código fosse apagado agora, esta spec seria suficiente para
 reconstruí-lo?
 
@@ -247,9 +286,9 @@ Não por completo. Falta:
   ativar, recusar inativação com entrega EM_ANDAMENTO, redefinir senha e
   restringir ações ao operador. Hoje os CA-01 a CA-03 só cobrem o cadastro,
   então as RN-04 a RN-10 não têm critério.
-- Mensagens de erro para nome fora de 3 a 80, usuário fora de 3 a 30,
-  campo vazio e inativação recusada.
-- Como a senha é guardada. A spec não diz se ela fica em texto ou protegida.
-- Se dois entregadores podem ter o mesmo nome.
-- A ordem da listagem e o desenho das telas.
-- Rotas e formato da API, e o esquema do banco.
+- Mensagem de erro da inativação recusada (RN-05).
+- O desenho das telas.
+
+Resolvidos na implementação: mensagens de nome, usuário e campo vazio
+(D-22), como a senha é guardada (D-23), nomes repetidos e ordem da listagem
+(D-24), rotas da API e esquema do banco (D-26).
