@@ -120,3 +120,4 @@ prof. Gustavo Martins Lima.
 - Marques Vinícius Melo Martins
 - Reidner dos Santos Medeiros
 - Rian Guedes Rodrigues
+- Ycaro Ryosuke Tanimoto
